@@ -19,7 +19,7 @@ Mask4D is a transformer-based model for 4D Panoptic Segmentation, achieving a ne
 </div>
 <br><br>
 
-[[Project Webpage](https://vision.rwth-aachen.de/mask4d)] [[arXiv](https://arxiv.org/abs/2309.xxxxx)]
+[[Project Webpage](https://vision.rwth-aachen.de/mask4d)] [[arXiv](https://arxiv.org/abs/2309.16133)]
 
 ## News
 
@@ -33,7 +33,7 @@ Soon!
 @articl{yilmaz2023mask4d,
   title     = {{Mask4D: Mask Transformer for 4D Panoptic Segmentation}},
   author    = {Yilmaz, Kadir and Schult, Jonas and Nekrasov, Alexey and Leibe, Bastian},
-  journal   = {arXiv prepring arXiv:2309.xxxxx},
+  journal   = {arXiv prepring arXiv:2309.16133},
   year      = {2023}
 }
 ```
