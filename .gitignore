@@ -1,0 +1,7 @@
+/saved
+/logs
+/data
+/.vscode
+.python-version
+__pycache__/
+*.out
