@@ -14,25 +14,23 @@ class SemanticKittiPreprocessing:
         data_dir: str = "/globalwork/data/SemanticKITTI/dataset",
         save_dir: str = "/globalwork/yilmaz/data/processed/semantic_kitti",
         modes: tuple = ("train", "validation", "test"),
-        git_repo: str = "./third_party/semantic-kitti-api",
     ):
         self.data_dir = Path(data_dir)
         self.save_dir = Path(save_dir)
         self.modes = modes
-        git_repo = Path(git_repo)
-        
+
         if not self.data_dir.exists():
             logger.error("Data folder doesn't exist")
             raise FileNotFoundError
         if self.save_dir.exists() is False:
             self.save_dir.mkdir(parents=True, exist_ok=True)
-        
+
         self.files = {}
         for data_type in self.modes:
             self.files.update({data_type: []})
-        
-        self.config = self._load_yaml(git_repo / "config" / "semantic-kitti.yaml")
-        self.create_label_database(git_repo / "config" / "semantic-kitti.yaml")
+
+        self.config = self._load_yaml("conf/semantic-kitti.yaml")
+        self.create_label_database("conf/semantic-kitti.yaml")
         self.pose = dict()
 
         for mode in self.modes:
@@ -42,17 +40,16 @@ class SemanticKittiPreprocessing:
                 filepaths = list(self.data_dir.glob(f"*/{scene:02}/velodyne/*bin"))
                 filepaths = [str(file) for file in filepaths]
                 self.files[mode].extend(natsorted(filepaths))
-                calibration = parse_calibration(
-                    Path(filepaths[0]).parent.parent / "calib.txt"
-                )
+                calibration = parse_calibration(Path(filepaths[0]).parent.parent / "calib.txt")
                 self.pose[mode].update(
                     {
                         scene: parse_poses(
-                            Path(filepaths[0]).parent.parent / "poses.txt", calibration,
+                            Path(filepaths[0]).parent.parent / "poses.txt",
+                            calibration,
                         ),
                     }
                 )
-    
+
     def preprocess(self):
         for mode in self.modes:
             database = []
@@ -76,10 +73,10 @@ class SemanticKittiPreprocessing:
                 else:
                     instance_database[unique_identifier] = {
                         "semantic_label": instance["semantic_label"],
-                        "filepaths": [instance["instance_filepath"]]
+                        "filepaths": [instance["instance_filepath"]],
                     }
         self.save_database(list(instance_database.values()), "train_instances")
-        
+
         validation_database = self._load_yaml(self.save_dir / "validation_database.yaml")
         for sample in tqdm(validation_database):
             instances = self.extract_instance_from_file(sample)
@@ -92,10 +89,10 @@ class SemanticKittiPreprocessing:
                 else:
                     instance_database[unique_identifier] = {
                         "semantic_label": instance["semantic_label"],
-                        "filepaths": [instance["instance_filepath"]]
+                        "filepaths": [instance["instance_filepath"]],
                     }
         self.save_database(list(instance_database.values()), "trainval_instances")
-    
+
     def extract_instance_from_file(self, sample):
         points = np.fromfile(sample["filepath"], dtype=np.float32).reshape(-1, 4)
         pose = np.array(sample["pose"]).T
@@ -106,7 +103,7 @@ class SemanticKittiPreprocessing:
         for panoptic_label in np.unique(label):
             semantic_label = panoptic_label & 0xFFFF
             semantic_label = np.vectorize(self.config["learning_map"].__getitem__)(semantic_label)
-            if np.isin(semantic_label, range(1,9)):
+            if np.isin(semantic_label, range(1, 9)):
                 instance_mask = label == panoptic_label
                 instance_points = points[instance_mask, :]
                 filename = f"{scene}_{panoptic_label:010d}_{sub_scene}.npy"
@@ -123,7 +120,7 @@ class SemanticKittiPreprocessing:
                 np.save(instance_filepath, instance_points.astype(np.float32))
                 file_instances.append(instance)
         return file_instances
-        
+
     def save_database(self, database, mode):
         for element in database:
             self._dict_to_yaml(element)
@@ -184,22 +181,15 @@ class SemanticKittiPreprocessing:
             "scene": int(scene),
             "pose": self.pose[mode][int(scene)][int(sub_scene)].tolist(),
         }
-        
+
         if mode in ["train", "validation"]:
             # getting label info
-            label_filepath = filepath.replace("velodyne", "labels").replace(
-                "bin", "label"
-            )
+            label_filepath = filepath.replace("velodyne", "labels").replace("bin", "label")
             sample["label_filepath"] = label_filepath
         return sample
 
+
 def parse_calibration(filename):
-    """ read calibration file with given filename
-        Returns
-        -------
-        dict
-            Calibration matrices as 4x4 numpy arrays.
-    """
     calib = {}
 
     with open(filename) as calib_file:
@@ -216,14 +206,8 @@ def parse_calibration(filename):
             calib[key] = pose
     return calib
 
-def parse_poses(filename, calibration):
-    """ read poses file with per-scan poses from given filename
-        Returns
-        -------
-        list
-            list of poses as 4x4 numpy arrays.
-    """
 
+def parse_poses(filename, calibration):
     poses = []
 
     Tr = calibration["Tr"]
@@ -243,11 +227,6 @@ def parse_poses(filename, calibration):
 
     return poses
 
+
 if __name__ == "__main__":
     Fire(SemanticKittiPreprocessing)
-
-# if __name__ == "__main__":
-    # preprocess_cls = SemanticKittiPreprocessing()
-    # preprocess_cls.preprocess_sequential()
-    # preprocess_cls.make_instance_database_sequential()
-    

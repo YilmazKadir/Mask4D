@@ -123,9 +123,7 @@ class MinkUNetBase(ResNetBase):
             conv_type=self.NON_BLOCK_CONV_TYPE,
             D=D,
         )
-        self.bntr4 = get_norm(
-            self.NORM_TYPE, self.PLANES[4], D, bn_momentum=bn_momentum
-        )
+        self.bntr4 = get_norm(self.NORM_TYPE, self.PLANES[4], D, bn_momentum=bn_momentum)
 
         self.inplanes = self.PLANES[4] + self.PLANES[2] * self.BLOCK.expansion
         self.block5 = self._make_layer(
@@ -146,9 +144,7 @@ class MinkUNetBase(ResNetBase):
             conv_type=self.NON_BLOCK_CONV_TYPE,
             D=D,
         )
-        self.bntr5 = get_norm(
-            self.NORM_TYPE, self.PLANES[5], D, bn_momentum=bn_momentum
-        )
+        self.bntr5 = get_norm(self.NORM_TYPE, self.PLANES[5], D, bn_momentum=bn_momentum)
 
         self.inplanes = self.PLANES[5] + self.PLANES[1] * self.BLOCK.expansion
         self.block6 = self._make_layer(
@@ -169,9 +165,7 @@ class MinkUNetBase(ResNetBase):
             conv_type=self.NON_BLOCK_CONV_TYPE,
             D=D,
         )
-        self.bntr6 = get_norm(
-            self.NORM_TYPE, self.PLANES[6], D, bn_momentum=bn_momentum
-        )
+        self.bntr6 = get_norm(self.NORM_TYPE, self.PLANES[6], D, bn_momentum=bn_momentum)
         self.relu = MinkowskiReLU(inplace=True)
 
         self.final = nn.Sequential(
@@ -186,9 +180,7 @@ class MinkUNetBase(ResNetBase):
             ),
             ME.MinkowskiBatchNorm(512),
             ME.MinkowskiReLU(),
-            conv(
-                512, out_channels, kernel_size=1, stride=1, dilation=1, bias=True, D=D
-            ),
+            conv(512, out_channels, kernel_size=1, stride=1, dilation=1, bias=True, D=D),
         )
 
     def forward(self, x):
@@ -396,9 +388,7 @@ class MinkUNetHyper(MinkUNetBase):
             norm_type=self.NORM_TYPE,
             bn_momentum=bn_momentum,
         )
-        self.pool_tr4 = ME.MinkowskiPoolingTranspose(
-            kernel_size=8, stride=8, dimension=D
-        )
+        self.pool_tr4 = ME.MinkowskiPoolingTranspose(kernel_size=8, stride=8, dimension=D)
         _ = self.inplanes
         self.convtr4p8s2 = conv_tr(
             self.inplanes,
@@ -410,9 +400,7 @@ class MinkUNetHyper(MinkUNetBase):
             conv_type=self.NON_BLOCK_CONV_TYPE,
             D=D,
         )
-        self.bntr4 = get_norm(
-            self.NORM_TYPE, self.PLANES[4], D, bn_momentum=bn_momentum
-        )
+        self.bntr4 = get_norm(self.NORM_TYPE, self.PLANES[4], D, bn_momentum=bn_momentum)
 
         self.inplanes = self.PLANES[4] + self.PLANES[2] * self.BLOCK.expansion
         self.block5 = self._make_layer(
@@ -423,9 +411,7 @@ class MinkUNetHyper(MinkUNetBase):
             norm_type=self.NORM_TYPE,
             bn_momentum=bn_momentum,
         )
-        self.pool_tr5 = ME.MinkowskiPoolingTranspose(
-            kernel_size=4, stride=4, dimension=D
-        )
+        self.pool_tr5 = ME.MinkowskiPoolingTranspose(kernel_size=4, stride=4, dimension=D)
         out_pool5 = self.inplanes
         self.convtr5p4s2 = conv_tr(
             self.inplanes,
@@ -437,9 +423,7 @@ class MinkUNetHyper(MinkUNetBase):
             conv_type=self.NON_BLOCK_CONV_TYPE,
             D=D,
         )
-        self.bntr5 = get_norm(
-            self.NORM_TYPE, self.PLANES[5], D, bn_momentum=bn_momentum
-        )
+        self.bntr5 = get_norm(self.NORM_TYPE, self.PLANES[5], D, bn_momentum=bn_momentum)
 
         self.inplanes = self.PLANES[5] + self.PLANES[1] * self.BLOCK.expansion
         self.block6 = self._make_layer(
@@ -450,9 +434,7 @@ class MinkUNetHyper(MinkUNetBase):
             norm_type=self.NORM_TYPE,
             bn_momentum=bn_momentum,
         )
-        self.pool_tr6 = ME.MinkowskiPoolingTranspose(
-            kernel_size=2, stride=2, dimension=D
-        )
+        self.pool_tr6 = ME.MinkowskiPoolingTranspose(kernel_size=2, stride=2, dimension=D)
         out_pool6 = self.inplanes
         self.convtr6p2s2 = conv_tr(
             self.inplanes,
@@ -464,18 +446,13 @@ class MinkUNetHyper(MinkUNetBase):
             conv_type=self.NON_BLOCK_CONV_TYPE,
             D=D,
         )
-        self.bntr6 = get_norm(
-            self.NORM_TYPE, self.PLANES[6], D, bn_momentum=bn_momentum
-        )
+        self.bntr6 = get_norm(self.NORM_TYPE, self.PLANES[6], D, bn_momentum=bn_momentum)
 
         self.relu = MinkowskiReLU(inplace=True)
 
         self.final = nn.Sequential(
             conv(
-                out_pool5
-                + out_pool6
-                + self.PLANES[6]
-                + self.PLANES[0] * self.BLOCK.expansion,
+                out_pool5 + out_pool6 + self.PLANES[6] + self.PLANES[0] * self.BLOCK.expansion,
                 512,
                 kernel_size=1,
                 bias=False,
@@ -542,7 +519,6 @@ class MinkUNetHyper14INBN(MinkUNetHyper):
 
 
 class STMinkUNetBase(MinkUNetBase):
-
     CONV_TYPE = ConvType.SPATIAL_HYPERCUBE_TEMPORAL_HYPERCROSS
 
     def __init__(self, in_channels, out_channels, config, D=4, **kwargs):

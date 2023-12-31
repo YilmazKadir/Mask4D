@@ -20,7 +20,7 @@ def get_parameters(cfg: DictConfig):
     if cfg.general.get("gpus", None) is None:
         cfg.general.gpus = os.environ.get("CUDA_VISIBLE_DEVICES", None)
     loggers = []
-    
+
     if not os.path.exists(cfg.general.save_dir):
         os.makedirs(cfg.general.save_dir)
     else:
@@ -30,12 +30,10 @@ def get_parameters(cfg: DictConfig):
     for log in cfg.logging:
         print(log)
         loggers.append(hydra.utils.instantiate(log))
-        loggers[-1].log_hyperparams(
-            flatten_dict(OmegaConf.to_container(cfg, resolve=True))
-        )
+        loggers[-1].log_hyperparams(flatten_dict(OmegaConf.to_container(cfg, resolve=True)))
 
     model = PanopticSegmentation(cfg)
-    
+
     logger.info(flatten_dict(OmegaConf.to_container(cfg, resolve=True)))
     return cfg, model, loggers
 
@@ -52,7 +50,7 @@ def train(cfg: DictConfig):
     # torch.use_deterministic_algorithms(True)
     runner = Trainer(
         logger=loggers,
-        accelerator='gpu',
+        accelerator="gpu",
         devices=1,
         callbacks=callbacks,
         default_root_dir=str(cfg.general.save_dir),
@@ -68,7 +66,7 @@ def validate(cfg: DictConfig):
     cfg, model, loggers = get_parameters(cfg)
     runner = Trainer(
         logger=loggers,
-        accelerator='gpu',
+        accelerator="gpu",
         devices=1,
         default_root_dir=str(cfg.general.save_dir),
     )
@@ -82,20 +80,22 @@ def test(cfg: DictConfig):
     cfg, model, loggers = get_parameters(cfg)
     runner = Trainer(
         logger=loggers,
-        accelerator='gpu',
+        accelerator="gpu",
         devices=1,
         default_root_dir=str(cfg.general.save_dir),
     )
     runner.test(model=model, ckpt_path=cfg.general.ckpt_path)
 
+
 @hydra.main(config_path="conf", config_name="config_panoptic_4d.yaml")
 def main(cfg: DictConfig):
-    if cfg['general']['mode'] == "train":
+    if cfg["general"]["mode"] == "train":
         train(cfg)
-    elif cfg['general']['mode'] == "validate":
+    elif cfg["general"]["mode"] == "validate":
         validate(cfg)
     else:
         test(cfg)
+
 
 if __name__ == "__main__":
     main()

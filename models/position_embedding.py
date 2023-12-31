@@ -13,12 +13,10 @@ def shift_scale_points(pred_xyz, input_range):
         torch.zeros_like(input_range[0], device=input_range[0].device),
         torch.ones_like(input_range[0], device=input_range[0].device),
     ]
-    
+
     src_diff = input_range[1][:, None, :] - input_range[0][:, None, :]
     dst_diff = dst_range[1][:, None, :] - dst_range[0][:, None, :]
-    prop_xyz = (
-        ((pred_xyz - input_range[0][:, None, :]) * dst_diff) / src_diff
-    ) + dst_range[0][:, None, :]
+    prop_xyz = (((pred_xyz - input_range[0][:, None, :]) * dst_diff) / src_diff) + dst_range[0][:, None, :]
     return prop_xyz
 
 
@@ -37,7 +35,7 @@ class PositionEmbeddingCoordsSine(nn.Module):
         # define a gaussian matrix input_ch -> output_ch
         B = torch.empty((d_in, d_pos // 2)).normal_()
         self.register_buffer("gauss_B", B)
-        
+
     @torch.no_grad()
     def forward(self, xyz, num_channels=None, input_range=None):
         # xyz is batch x npoints x 3
@@ -55,9 +53,7 @@ class PositionEmbeddingCoordsSine(nn.Module):
             xyz = shift_scale_points(xyz, input_range=input_range)
 
         xyz *= 2 * np.pi
-        xyz_proj = torch.mm(xyz.view(-1, self.d_in), self.gauss_B[:, :d_out]).view(
-            bsize, npoints, d_out
-        )
+        xyz_proj = torch.mm(xyz.view(-1, self.d_in), self.gauss_B[:, :d_out]).view(bsize, npoints, d_out)
         final_embeds = [xyz_proj.sin(), xyz_proj.cos()]
 
         # return batch x d_pos x npoints embedding

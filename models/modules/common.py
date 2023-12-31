@@ -139,7 +139,7 @@ def conv(
         stride,
         dilation,
         region_type=region_type,
-        axis_types=None, # axis_types JONAS
+        axis_types=None,  # axis_types JONAS
         dimension=D,
     )
 

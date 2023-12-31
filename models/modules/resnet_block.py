@@ -107,9 +107,7 @@ class BottleneckBase(nn.Module):
         self.norm2 = get_norm(self.NORM_TYPE, planes, D, bn_momentum=bn_momentum)
 
         self.conv3 = conv(planes, planes * self.expansion, kernel_size=1, D=D)
-        self.norm3 = get_norm(
-            self.NORM_TYPE, planes * self.expansion, D, bn_momentum=bn_momentum
-        )
+        self.norm3 = get_norm(self.NORM_TYPE, planes * self.expansion, D, bn_momentum=bn_momentum)
 
         self.relu = MinkowskiReLU(inplace=True)
         self.downsample = downsample

@@ -25,8 +25,58 @@ Mask4D is a transformer-based model for 4D Panoptic Segmentation, achieving a ne
 
 * **2023-09-28**: Paper on arXiv
 
-## Running the code
-Soon!
+### Dependencies
+The main dependencies of the project are the following:
+```yaml
+python: 3.8
+cuda: 11.7
+```
+You can set up a conda environment as follows
+```
+conda create --name mask4d python=3.8
+conda activate mask4d
+pip install -r requirements.txt
+
+pip install torch==1.13.0+cu117 torchvision==0.14.0+cu117 torchaudio==0.13.0 --extra-index-url https://download.pytorch.org/whl/cu117
+
+pip install torch-scatter -f https://data.pyg.org/whl/torch-1.13.0+cu117.html
+
+pip install 'git+https://github.com/facebookresearch/detectron2.git@710e7795d0eeadf9def0e7ef957eea13532e34cf' --no-deps
+
+cd third_party/pointnet2 && python setup.py install
+
+cd ..
+git clone https://github.com/NVIDIA/MinkowskiEngine.git
+cd MinkowskiEngine
+python setup.py install
+cd ../..
+```
+
+### Data preprocessing
+After installing the dependencies, we preprocess the SemanticKITTI dataset.
+
+```
+python -m datasets.preprocessing.semantic_kitti_preprocessing preprocess \
+--data_dir "PATH_TO_RAW_SEMKITTI_DATASET" \
+--save_dir "data/semantic_kitti"
+
+python -m datasets.preprocessing.semantic_kitti_preprocessing make_instance_database \
+--data_dir "PATH_TO_RAW_SEMKITTI_DATASET" \
+--save_dir "data/semantic_kitti"
+```
+
+### Training and testing
+Train Mask4D:
+```bash
+python main_panoptic.py
+```
+Please refer to the [config scripts](https://github.com/YilmazKadir/Mask4D/tree/main/scripts) for detailed instructions how to reproduce our results.
+In the simplest case the inference command looks as follows:
+```bash
+python main_panoptic.py \
+general.mode="validate" \
+general.ckpt_path='PATH_TO_CHECKPOINT.ckpt'
+```
 
 ## BibTeX
 ```

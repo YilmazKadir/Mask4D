@@ -21,7 +21,7 @@ class Res16UNetBase(ResNetBase):
     # Once data is processed, call clear to reset the model before calling initialize_coords
     def __init__(self, in_channels, out_channels, config, D=3, **kwargs):
         super().__init__(in_channels, out_channels, config, D)
-        
+
     def network_initialization(self, in_channels, out_channels, config, D):
         # Setup net_metadata
         dilations = self.DILATIONS
@@ -132,9 +132,7 @@ class Res16UNetBase(ResNetBase):
             conv_type=self.NON_BLOCK_CONV_TYPE,
             D=D,
         )
-        self.bntr4 = get_norm(
-            self.NORM_TYPE, self.PLANES[4], D, bn_momentum=bn_momentum
-        )
+        self.bntr4 = get_norm(self.NORM_TYPE, self.PLANES[4], D, bn_momentum=bn_momentum)
 
         self.inplanes = self.PLANES[4] + self.PLANES[2] * self.BLOCK.expansion
         self.block5 = self._make_layer(
@@ -155,9 +153,7 @@ class Res16UNetBase(ResNetBase):
             conv_type=self.NON_BLOCK_CONV_TYPE,
             D=D,
         )
-        self.bntr5 = get_norm(
-            self.NORM_TYPE, self.PLANES[5], D, bn_momentum=bn_momentum
-        )
+        self.bntr5 = get_norm(self.NORM_TYPE, self.PLANES[5], D, bn_momentum=bn_momentum)
 
         self.inplanes = self.PLANES[5] + self.PLANES[1] * self.BLOCK.expansion
         self.block6 = self._make_layer(
@@ -178,9 +174,7 @@ class Res16UNetBase(ResNetBase):
             conv_type=self.NON_BLOCK_CONV_TYPE,
             D=D,
         )
-        self.bntr6 = get_norm(
-            self.NORM_TYPE, self.PLANES[6], D, bn_momentum=bn_momentum
-        )
+        self.bntr6 = get_norm(self.NORM_TYPE, self.PLANES[6], D, bn_momentum=bn_momentum)
 
         self.inplanes = self.PLANES[6] + self.PLANES[0] * self.BLOCK.expansion
         self.block7 = self._make_layer(
@@ -201,9 +195,7 @@ class Res16UNetBase(ResNetBase):
             conv_type=self.NON_BLOCK_CONV_TYPE,
             D=D,
         )
-        self.bntr7 = get_norm(
-            self.NORM_TYPE, self.PLANES[7], D, bn_momentum=bn_momentum
-        )
+        self.bntr7 = get_norm(self.NORM_TYPE, self.PLANES[7], D, bn_momentum=bn_momentum)
 
         self.inplanes = self.PLANES[7] + self.INIT_DIM
         self.block8 = self._make_layer(
@@ -369,15 +361,16 @@ class Res16UNet34B(Res16UNet34):
 class Res16UNet34C(Res16UNet34):
     PLANES = (32, 64, 128, 256, 256, 128, 96, 96)
 
+
 class Custom30M(Res16UNet34):
     PLANES = (32, 64, 128, 256, 128, 64, 64, 32)
+
 
 class Res16UNet34D(Res16UNet34):
     PLANES = (32, 64, 128, 256, 256, 128, 96, 128)
 
 
 class STRes16UNetBase(Res16UNetBase):
-
     CONV_TYPE = ConvType.SPATIAL_HYPERCUBE_TEMPORAL_HYPERCROSS
 
     def __init__(self, in_channels, out_channels, config, D=4, **kwargs):
@@ -418,7 +411,7 @@ class STRes16UNet18A(STRes16UNet18):
 
 class STResTesseract16UNetBase(STRes16UNetBase):
     pass
-    #CONV_TYPE = ConvType.HYPERCUBE
+    # CONV_TYPE = ConvType.HYPERCUBE
 
 
 class STResTesseract16UNet18A(STRes16UNet18A, STResTesseract16UNetBase):

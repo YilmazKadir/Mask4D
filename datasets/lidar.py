@@ -13,7 +13,6 @@ class LidarDataset(Dataset):
         data_dir: Optional[str] = "data/processed/semantic_kitti",
         mode: Optional[str] = "train",
         add_distance: Optional[bool] = False,
-        data_percent: Optional[float] = 1.0,
         ignore_label: Optional[Union[int, List[int]]] = 255,
         volume_augmentations_path: Optional[str] = None,
         instance_population: Optional[int] = 0,
@@ -26,21 +25,19 @@ class LidarDataset(Dataset):
         self.instance_population = instance_population
         self.sweep = sweep
         self.config = self._load_yaml("conf/semantic-kitti.yaml")
-        
+
         # loading database file
         database_path = Path(self.data_dir)
         if not (database_path / f"{mode}_database.yaml").exists():
             print(f"generate {database_path}/{mode}_database.yaml first")
             exit()
         self.data = self._load_yaml(database_path / f"{mode}_database.yaml")
-        
+
         self.label_info = self._select_correct_labels(self.config["learning_ignore"])
         # augmentations
         self.volume_augmentations = V.NoOp()
         if volume_augmentations_path is not None:
-            self.volume_augmentations = V.load(
-                volume_augmentations_path, data_format="yaml"
-            )
+            self.volume_augmentations = V.load(volume_augmentations_path, data_format="yaml")
         # reformulating in sweeps
         data = [[]]
         last_scene = self.data[0]["scene"]
@@ -53,22 +50,19 @@ class LidarDataset(Dataset):
         for i in range(len(data)):
             data[i] = list(self.chunks(data[i], sweep))
         self.data = [val for sublist in data for val in sublist]
-        
+
         if instance_population > 0:
             self.instance_data = self._load_yaml(database_path / f"{mode}_instances_database.yaml")
-        
-        if data_percent < 1.0:
-            self.data = self.data[: int(len(self.data) * data_percent)]
 
     def chunks(self, lst, n):
-        if "train" in self.mode or n==1:
+        if "train" in self.mode or n == 1:
             for i in range(len(lst) - n + 1):
                 yield lst[i : i + n]
         else:
-            for i in range(0, len(lst) - n + 1, n-1):
+            for i in range(0, len(lst) - n + 1, n - 1):
                 yield lst[i : i + n]
             if i != len(lst) - n:
-                yield lst[i + n - 1: ]
+                yield lst[i + n - 1 :]
 
     def __len__(self):
         return len(self.data)
@@ -99,28 +93,27 @@ class LidarDataset(Dataset):
                 semantic_label = np.vectorize(self.config["learning_map"].__getitem__)(semantic_label)
                 labels = np.hstack((semantic_label[:, None], panoptic_label[:, None]))
                 labels_list.append(labels)
-        
+
         coordinates = np.vstack(coordinates_list)
         features = np.vstack(features_list)
         labels = np.vstack(labels_list)
-        
+
         if "train" in self.mode and self.instance_population > 0:
             max_instance_id = np.amax(labels[:, 1])
             pc_center = coordinates.mean(axis=0)
             instance_c, instance_f, instance_l = self.populate_instances(
-                max_instance_id, pc_center, self.instance_population)
+                max_instance_id, pc_center, self.instance_population
+            )
             coordinates = np.vstack((coordinates, instance_c))
             features = np.vstack((features, instance_f))
             labels = np.vstack((labels, instance_l))
-            
+
         if self.add_distance:
             center_coordinate = coordinates.mean(0)
             features = np.hstack(
                 (
                     features,
-                    np.linalg.norm(coordinates - center_coordinate, axis=1)[
-                        :, np.newaxis
-                    ],
+                    np.linalg.norm(coordinates - center_coordinate, axis=1)[:, np.newaxis],
                 )
             )
 
@@ -128,22 +121,20 @@ class LidarDataset(Dataset):
         if "train" in self.mode:
             coordinates -= coordinates.mean(0)
             if 0.5 > random():
-                coordinates += (
-                    np.random.uniform(coordinates.min(0), coordinates.max(0)) / 2
-                )
+                coordinates += np.random.uniform(coordinates.min(0), coordinates.max(0)) / 2
             aug = self.volume_augmentations(points=coordinates)
             coordinates = aug["points"]
-            
+
         features = np.hstack((coordinates, features))
-        
+
         labels[:, 0] = np.vectorize(self.label_info.__getitem__)(labels[:, 0])
-        
+
         return {
             "num_points": acc_num_points,
             "coordinates": coordinates,
             "features": features,
             "labels": labels,
-            "sequence": scan["scene"]
+            "sequence": scan["scene"],
         }
 
     @staticmethod
@@ -155,7 +146,7 @@ class LidarDataset(Dataset):
     def _select_correct_labels(self, learning_ignore):
         count = 0
         label_info = dict()
-        for k, v, in learning_ignore.items():
+        for k, v in learning_ignore.items():
             if v:
                 label_info[k] = self.ignore_label
             else:
@@ -181,7 +172,7 @@ class LidarDataset(Dataset):
                     filepath = instance_dict["filepaths"][idx]
                     instance = np.load(filepath)
                     time_array = np.ones((instance.shape[0], 1)) * time
-                    instance = np.hstack((instance[:, :3], time_array , instance[:, 3:4]))
+                    instance = np.hstack((instance[:, :3], time_array, instance[:, 3:4]))
                     instance_list.append(instance)
                     idx = idx + 1
             instances = np.vstack(instance_list)

@@ -9,15 +9,15 @@ N = 35000
 C = 96
 h = 6
 softmax_attn_flat = torch.rand(M, h).cuda()
-value = torch.rand(N, h, C//h).cuda()
+value = torch.rand(N, h, C // h).cuda()
 
 index_0 = torch.rand(M)
 index_0[index_0 < 0] = 0
-index_0 = (index_0*N).long().cuda()
+index_0 = (index_0 * N).long().cuda()
 
 index_1 = torch.rand(M)
 index_1[index_1 < 0] = 0
-index_1 = (index_1*N).long().cuda()
+index_1 = (index_1 * N).long().cuda()
 
 softmax_attn_flat.requires_grad = True
 value.requires_grad = True
@@ -43,13 +43,12 @@ x_v2 = x_v2.view(N, C)
 loss = x_v2.sum()
 loss.backward()
 
-print("x_v2.shape: {}, x_v2[:5,:10]: {}".format(x_v2.shape, x_v2[:5,:10]))
+print("x_v2.shape: {}, x_v2[:5,:10]: {}".format(x_v2.shape, x_v2[:5, :10]))
 
 print("softmax_attn_flat.grad[:5, :10]: ", softmax_attn_flat.grad[:5, :10])
 print("value.grad[:5, :3, :5]: ", value.grad[:5, :3, :5])
 input()
 
-print("((x-x_v2)**2 < 1e-8).all(): ", ((x-x_v2)**2 < 1e-8).all())
+print("((x-x_v2)**2 < 1e-8).all(): ", ((x - x_v2) ** 2 < 1e-8).all())
 
-print("torch.max((x-x_v2)**2): ", torch.max((x-x_v2)**2))
-
+print("torch.max((x-x_v2)**2): ", torch.max((x - x_v2) ** 2))

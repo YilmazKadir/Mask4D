@@ -1,6 +1,6 @@
 /saved
 /logs
-/data
+/data/semantic_kitti
 /.vscode
 .python-version
 __pycache__/

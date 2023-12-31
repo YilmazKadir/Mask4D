@@ -6,7 +6,6 @@ general:
   workspace: kadiryilmaz
   instance_population: 10
   dbscan_eps: null
-  data_percent: 1.0
   experiment_name: ${now:%Y-%m-%d_%H%M%S}
   save_dir: saved/${general.experiment_name}
   gpus: 1

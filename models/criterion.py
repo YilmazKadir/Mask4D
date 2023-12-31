@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+
 def dice_loss(inputs: torch.Tensor, targets: torch.Tensor, num_masks: float):
     inputs = inputs.sigmoid()
     inputs = inputs.flatten(1)
@@ -11,9 +12,7 @@ def dice_loss(inputs: torch.Tensor, targets: torch.Tensor, num_masks: float):
     return loss.sum() / num_masks
 
 
-dice_loss_jit = torch.jit.script(
-    dice_loss
-)  # type: torch.jit.ScriptModule
+dice_loss_jit = torch.jit.script(dice_loss)  # type: torch.jit.ScriptModule
 
 
 def sigmoid_ce_loss(inputs: torch.Tensor, targets: torch.Tensor, num_masks: float):
@@ -21,9 +20,7 @@ def sigmoid_ce_loss(inputs: torch.Tensor, targets: torch.Tensor, num_masks: floa
     return loss.mean(1).sum() / num_masks
 
 
-sigmoid_ce_loss_jit = torch.jit.script(
-    sigmoid_ce_loss
-)  # type: torch.jit.ScriptModule
+sigmoid_ce_loss_jit = torch.jit.script(sigmoid_ce_loss)  # type: torch.jit.ScriptModule
 
 
 def box_loss(inputs: torch.Tensor, targets: torch.Tensor, num_bboxs: float):
@@ -31,9 +28,7 @@ def box_loss(inputs: torch.Tensor, targets: torch.Tensor, num_bboxs: float):
     return loss.mean(1).sum() / num_bboxs
 
 
-box_loss_jit = torch.jit.script(
-    box_loss
-)  # type: torch.jit.ScriptModule
+box_loss_jit = torch.jit.script(box_loss)  # type: torch.jit.ScriptModule
 
 
 class SetCriterion(nn.Module):
@@ -60,7 +55,7 @@ class SetCriterion(nn.Module):
         self.losses = losses
         empty_weight = torch.ones(num_classes + 1)
         empty_weight[-1] = self.eos_coef
-        
+
         self.register_buffer("empty_weight", empty_weight)
 
     def loss_labels(self, outputs, targets, indices):
@@ -73,24 +68,26 @@ class SetCriterion(nn.Module):
         )
         target_classes[idx] = target_classes_o
 
-        loss_ce = F.cross_entropy(src_logits.transpose(1, 2), target_classes, self.empty_weight, ignore_index=255)
+        loss_ce = F.cross_entropy(
+            src_logits.transpose(1, 2), target_classes, self.empty_weight, ignore_index=255
+        )
         losses = {"loss_ce": loss_ce}
         return losses
 
     def loss_masks(self, outputs, targets, indices):
         loss_masks = []
         loss_dices = []
-        
+
         for batch_id, (map_id, target_id) in enumerate(indices):
             map = outputs["pred_masks"][batch_id][:, map_id].T
             target_mask = targets[batch_id]["masks"][target_id].float()
             num_masks = target_mask.shape[0]
-            
+
             loss_masks.append(sigmoid_ce_loss_jit(map, target_mask, num_masks))
             loss_dices.append(dice_loss_jit(map, target_mask, num_masks))
         return {
             "loss_mask": torch.sum(torch.stack(loss_masks)),
-            "loss_dice": torch.sum(torch.stack(loss_dices))
+            "loss_dice": torch.sum(torch.stack(loss_dices)),
         }
 
     def loss_bboxs(self, outputs, targets, indices):
@@ -122,11 +119,7 @@ class SetCriterion(nn.Module):
         return batch_idx, tgt_idx
 
     def get_loss(self, loss, outputs, targets, indices):
-        loss_map = {
-            'labels': self.loss_labels,
-            'masks': self.loss_masks,
-            'bboxs': self.loss_bboxs
-        }
+        loss_map = {"labels": self.loss_labels, "masks": self.loss_masks, "bboxs": self.loss_bboxs}
         return loss_map[loss](outputs, targets, indices)
 
     def forward(self, outputs, targets):
@@ -140,12 +133,12 @@ class SetCriterion(nn.Module):
 
         # Retrieve the matching between the outputs of the last layer and the targets
         indices = self.matcher(outputs_without_aux, targets)
-        
+
         # Compute all the requested losses
         losses = {}
         for loss in self.losses:
             losses.update(self.get_loss(loss, outputs, targets, indices))
-        
+
         # In case of auxiliary losses, we repeat this process with the output of each intermediate layer.
         if "aux_outputs" in outputs:
             for i, aux_outputs in enumerate(outputs["aux_outputs"]):
